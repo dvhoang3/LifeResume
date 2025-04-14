@@ -9,6 +9,6 @@ const router = Router();
 
 router.post('/login', validateRequiredKeysFromPayload(['username', 'password']), usersController.login);
 router.post('/signup', validateModelFromPayloadHandler(User), usersController.signUp);
-router.patch('/:id', validateObjectIdFromRouteHandler, usersController.updateUser);
+router.patch('/:id', validateObjectIdFromRouteHandler(), usersController.updateUser);
 
 export default router;

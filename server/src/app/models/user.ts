@@ -1,23 +1,25 @@
-import { Model, ObjectId, Schema, model } from 'mongoose';
+import mongoose from 'mongoose';
 
 export interface IUser {
-  _id: ObjectId;
+  _id: mongoose.ObjectId;
   username: string;
   password: string;
   firstName: string;
   lastName: string;
-  email: string;
+  email?: string;
   phoneNumber?: string;
   linkedIn?: string;
   gitHub?: string;
   desiredRole?: string;
 }
-type UserModel =  Model<IUser>;
+type UserModel =  mongoose.Model<IUser>;
 
-const userSchema: Schema<IUser, UserModel> = new Schema<IUser, UserModel>({
+const userSchema: mongoose.Schema<IUser, UserModel> = new mongoose.Schema<IUser, UserModel>({
   username: {
     type: String,
     required: [true, 'Username is required.'],
+    unique: true,
+    lowercase: true,
     select: false,
   },
   password: {
@@ -35,20 +37,27 @@ const userSchema: Schema<IUser, UserModel> = new Schema<IUser, UserModel>({
   },
   email: {
     type: String,
-    required: [true, 'Email is required.'],
-    unique: true,
+    required: false,
     validate: [
       {
         validator: function(value: string) {
           return /^\S+@\S+\.\S+$/.test(value);
         },
-        message: 'Email format is invalid.'
-      }
-    ]
+        message: 'Email format is invalid.',
+      },
+    ],
   },
   phoneNumber: {
     type: String,
     required: false,
+    validate: [
+      {
+        validator: function(value: string) {
+          return /^[1-9]\d{2}-\d{3}-\d{4}$/.test(value);
+        },
+        message: 'Phone number format is invalid.',
+      },
+    ],
   },
   linkedIn: {
     type: String,
@@ -64,4 +73,4 @@ const userSchema: Schema<IUser, UserModel> = new Schema<IUser, UserModel>({
   },
 });
 
-export const User: UserModel = model<IUser, UserModel>('User', userSchema);
+export const User: UserModel = mongoose.model<IUser, UserModel>('user', userSchema);

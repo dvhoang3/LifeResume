@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { APP_DEBUG } from "../../config/config";
+import config from "../../config/config";
 import CustomError from "../errors/custom-error";
 
 function getErrorMessage(err: any) {
@@ -10,7 +10,7 @@ function getErrorMessage(err: any) {
 }
 
 export default function errorHandler(err: any, req: Request, res: Response, next: NextFunction): void {
-  if (res.headersSent || APP_DEBUG) {
+  if (res.headersSent || config.APP_DEBUG) {
     next(err);
     return;
   }
