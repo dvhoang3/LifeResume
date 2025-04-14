@@ -9,7 +9,7 @@ function getErrorMessage(err: any) {
   return "An internal error has occurred.";
 }
 
-export default function errorHandler(err: any, req: Request, res: Response, next: NextFunction) {
+export default function errorHandler(err: any, req: Request, res: Response, next: NextFunction): void {
   if (res.headersSent || APP_DEBUG) {
     next(err);
     return;
