@@ -17,7 +17,8 @@ async function authorizeUser(id: string): Promise<string> {
 
 async function login(username: string, password: string): Promise<string> {
   const user: IUser | null = await User.findOne({ username })
-    .select(['+username', '+password']);
+    .select(['+username', '+password'])
+    .lean();
   if (user == null) throw new EntityNotFoundError(User, { username });
 
   if (!await bcrypt.compare(password, user.password)) throw new UnauthorizedError();
@@ -36,14 +37,14 @@ async function signUp(userModel: IUser): Promise<string> {
 }
 
 async function getUserById(id: string): Promise<IUser> {
-  const user: IUser | null = await User.findById(id);
+  const user: IUser | null = await User.findById(id).lean();
   if (user == null) throw new EntityNotFoundError(User, { id });
   return user;
 }
 
 async function updateUser(id: string, dataModel: Partial<IUser>): Promise<IUser> {
   const { username, password, ...userObject } = dataModel;
-  const user: IUser | null = await User.findByIdAndUpdate(id, userObject, { new: true, runValidators: true });
+  const user: IUser | null = await User.findByIdAndUpdate(id, userObject, { new: true, runValidators: true }).lean();
   if (user == null) throw new EntityNotFoundError(User, { id });
   return user;
 }
