@@ -1,5 +1,5 @@
 import { Editor, EditorContent, useEditor } from '@tiptap/react';
-import './ResumeEditor.css';
+import styles from './ResumeEditor.module.css';
 import Document from '@tiptap/extension-document';
 import History from "@tiptap/extension-history";
 import Paragraph from '@tiptap/extension-paragraph';
@@ -16,11 +16,14 @@ import TextStyle from '@tiptap/extension-text-style';
 import FontFamily from '@tiptap/extension-font-family';
 import Color from '@tiptap/extension-color';
 import TextAlign from '@tiptap/extension-text-align';
+import HardBreak from '@tiptap/extension-hard-break'
 import { MdFormatBold } from "react-icons/md";
 import { MdFormatItalic } from "react-icons/md";
 import { MdFormatUnderlined } from "react-icons/md";
+import FontDropdown from "./FontDropdown/FontDropdown";
 
-const content: string = '<p>Hello World!</p>';
+const iconSize: number = 18;
+// const content: string = '<p>Hello World!</p>';
 
 function ResumeEditor() {
   const editor = useEditor({
@@ -45,22 +48,36 @@ function ResumeEditor() {
       TextAlign.configure({
         types: ['heading', 'paragraph'],
       }),
+      HardBreak,
     ],
     injectCSS: false,
     editorProps: {
       attributes: {
-        class: 'editor-content-wrapper',
+        class: styles.editorContentContainer,
       },
     },
   }) as Editor;
 
   return (
     <>
-      <div className="editor">
-        <div className="toolbar">
-            <button className="toolbar-button"><MdFormatBold /></button>
-            <button className="toolbar-button"><MdFormatItalic /></button>
-            <button className="toolbar-button"><MdFormatUnderlined /></button>
+      <div className={styles.editorContainer}>
+        <div className={styles.toolbar}>
+          <FontDropdown />
+          <button className={`${styles.toolbarButton} ${editor.isActive('bold') ? styles.isActive : ''}`}
+            onClick={() => editor.chain().focus().toggleBold().run()}
+          >
+            <MdFormatBold size={iconSize} />
+          </button>
+          <button className={`${styles.toolbarButton} ${editor.isActive('italic') ? styles.isActive : ''}`}
+            onClick={() => editor.chain().focus().toggleItalic().run()}
+          >
+            <MdFormatItalic size={iconSize} />
+          </button>
+          <button className={`${styles.toolbarButton} ${editor.isActive('underline') ? styles.isActive : ''}`}
+            onClick={() => editor.chain().focus().toggleUnderline().run()}
+          >
+            <MdFormatUnderlined size={iconSize} />
+          </button>
         </div>
         <EditorContent editor={editor} />
       </div>

@@ -10,11 +10,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@base-ui-components/react": "^1.0.0-alpha.7",
     "@tiptap/extension-bold": "^2.11.7",
     "@tiptap/extension-bullet-list": "^2.11.7",
     "@tiptap/extension-color": "^2.11.7",
     "@tiptap/extension-document": "^2.11.7",
     "@tiptap/extension-font-family": "^2.11.7",
+    "@tiptap/extension-hard-break": "^2.11.7",
     "@tiptap/extension-heading": "^2.11.7",
     "@tiptap/extension-history": "^2.11.7",
     "@tiptap/extension-horizontal-rule": "^2.11.7",
