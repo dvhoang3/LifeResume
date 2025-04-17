@@ -1,0 +1,15 @@
+.trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25em;
+  padding: 0.25em 0.5em;
+  min-width: 120px;
+  height: 30px;
+  border-radius: 4px;
+  user-select: none;
+  cursor: pointer;
+}
+.trigger:hover {
+  background-color: rgba(177, 211, 255, 0.3);
+}
