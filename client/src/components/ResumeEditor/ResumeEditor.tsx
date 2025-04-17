@@ -20,10 +20,10 @@ import HardBreak from '@tiptap/extension-hard-break'
 import { MdFormatBold } from "react-icons/md";
 import { MdFormatItalic } from "react-icons/md";
 import { MdFormatUnderlined } from "react-icons/md";
-import FontDropdown from "./FontDropdown/FontDropdown";
+import FontDropdown, { fontOptions } from "./FontDropdown/FontDropdown";
+import { useState } from "react";
 
 const iconSize: number = 18;
-// const content: string = '<p>Hello World!</p>';
 
 function ResumeEditor() {
   const editor = useEditor({
@@ -58,11 +58,26 @@ function ResumeEditor() {
     },
   }) as Editor;
 
+  const setEditorFontHandler = (font: string): void => {
+    editor.chain().focus().setFontFamily(font).run();
+  }
+  const getSelectedFont = (): string | null => {
+    const activeFont = fontOptions.find(font => editor.isActive('textStyle', { fontFamily: font })) ?? null;
+
+    if (!editor.getText().length && !activeFont) {
+      setEditorFontHandler(fontOptions[0]);
+    }
+    return activeFont;
+  }
+
   return (
     <>
       <div className={styles.editorContainer}>
         <div className={styles.toolbar}>
-          <FontDropdown />
+          <FontDropdown
+            setEditorFontHandler={setEditorFontHandler}
+            selectedFont={getSelectedFont()}
+          />
           <button className={`${styles.toolbarButton} ${editor.isActive('bold') ? styles.isActive : ''}`}
             onClick={() => editor.chain().focus().toggleBold().run()}
           >

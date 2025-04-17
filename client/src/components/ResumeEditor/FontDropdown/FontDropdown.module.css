@@ -3,7 +3,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.25em;
-  padding: 0.25em 0.5em;
+  padding: 0.25em 0.75em;
   min-width: 120px;
   height: 30px;
   border-radius: 4px;
@@ -12,4 +12,47 @@
 }
 .trigger:hover {
   background-color: rgba(177, 211, 255, 0.3);
+}
+.trigger[data-popup-open] {
+  background-color: rgba(177, 211, 255, 0.3);
+}
+.trigger:focus-visible {
+  outline: none;
+}
+
+.popup {
+  max-height: var(--available-height);
+  overflow-y: auto;
+  background-color: white;
+  box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+}
+.popup:focus-visible {
+  outline: none;
+}
+
+.item {
+  display: grid;
+  grid-template-columns: 0.75em 1fr;
+  gap: 0.25em;
+  padding: 0.25em 0.5em;
+  width: var(--anchor-width);
+  gap: 0.5em;
+  font-size: 15px;
+  padding: 0.5em 0.25em;
+  user-select: none;
+  cursor: pointer;
+}
+.item:hover {
+  background-color: rgba(177, 211, 255, 0.3);
+}
+.item:focus-visible {
+  outline: none;
+}
+
+.itemIndicator {
+  grid-column-start: 1;
+}
+.itemText {
+  grid-column-start: 2;
 }

@@ -2,7 +2,12 @@ import { Select } from "@base-ui-components/react";
 import { FaAngleDown, FaCheck } from "react-icons/fa";
 import styles from './FontDropdown.module.css'
 
-const fontOptions: string[] = [
+interface FontDropdownProps {
+  selectedFont: string | null,
+  setEditorFontHandler: (font: string) => void,
+}
+
+export const fontOptions: string[] = [
   'Calibri',
   'Arial',
   'Cambria',
@@ -14,13 +19,12 @@ const fontOptions: string[] = [
   'Georgia',
   'Helvetica',
   'Verdana',
-];
+].sort((a, b) => a.localeCompare(b));
 
-function FontDropdown() {
-
+function FontDropdown({ selectedFont, setEditorFontHandler }: FontDropdownProps) {  
   return (
     <>
-      <Select.Root>
+      <Select.Root value={selectedFont} onValueChange={(value) => setEditorFontHandler(value)}>
         <Select.Trigger className={styles.trigger}>
           <Select.Value />
           <Select.Icon>
@@ -29,15 +33,15 @@ function FontDropdown() {
         </Select.Trigger>
 
         <Select.Portal>
-          <Select.Positioner sideOffset={8}>
+          <Select.Positioner sideOffset={3}>
             <Select.ScrollUpArrow />
-            <Select.Popup>
+            <Select.Popup className={styles.popup}>
               {fontOptions.map((font: string) =>
-                <Select.Item value={font} key={font}>
-                  <Select.ItemIndicator>
-                    <FaCheck />
+                <Select.Item className={styles.item} value={font} key={font}>
+                  <Select.ItemIndicator className={styles.itemIndicator}>
+                    <FaCheck size={12} />
                   </Select.ItemIndicator>
-                  <Select.ItemText>
+                  <Select.ItemText className={styles.itemText}>
                     {font}
                   </Select.ItemText>
                 </Select.Item>
