@@ -21,7 +21,6 @@ import { MdFormatBold } from "react-icons/md";
 import { MdFormatItalic } from "react-icons/md";
 import { MdFormatUnderlined } from "react-icons/md";
 import FontDropdown, { fontOptions } from "./FontDropdown/FontDropdown";
-import { useState } from "react";
 
 const iconSize: number = 18;
 
