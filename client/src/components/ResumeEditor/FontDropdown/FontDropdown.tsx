@@ -4,27 +4,27 @@ import styles from './FontDropdown.module.css'
 
 interface FontDropdownProps {
   selectedFont: string | null,
-  setEditorFontHandler: (font: string) => void,
+  setFont: React.Dispatch<React.SetStateAction<string | null>>,
 }
 
 export const fontOptions: string[] = [
-  'Calibri',
   'Arial',
-  'Cambria',
-  'Times New Roman',
-  'Garamond',
-  'Trebuchet MS',
-  'Book Antiqua',
   'Arial Narrow',
+  'Book Antiqua',
+  'Calibri',
+  'Cambria',
+  'Garamond',
   'Georgia',
   'Helvetica',
+  'Times New Roman',
+  'Trebuchet MS',
   'Verdana',
-].sort((a, b) => a.localeCompare(b));
+];
 
-function FontDropdown({ selectedFont, setEditorFontHandler }: FontDropdownProps) {  
+function FontDropdown({ selectedFont, setFont }: FontDropdownProps) {  
   return (
     <>
-      <Select.Root value={selectedFont} onValueChange={(value) => setEditorFontHandler(value)}>
+      <Select.Root value={selectedFont} onValueChange={(font) => setFont(font)}>
         <Select.Trigger className={styles.trigger}>
           <Select.Value />
           <Select.Icon>

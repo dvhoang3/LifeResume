@@ -5,7 +5,8 @@
   gap: 0.25em;
   padding: 0.25em 0.75em;
   min-width: 120px;
-  height: 30px;
+  height: 100%;
+  max-height: 30px;
   border-radius: 4px;
   user-select: none;
   cursor: pointer;

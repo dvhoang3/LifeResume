@@ -20,11 +20,19 @@
   justify-content: center;
   align-items: center;
   gap: 1px;
-  padding-inline: 1em;
+  padding: 0.25em 1em;
 }
+
+.toolbarSpacer {
+  height: 100%;
+  border-right: 1px solid #b8b8b8;
+  margin-inline: 0.25em;
+}
+
 .toolbarButton {
   width: 30px;
-  height: 30px;
+  height: 100%;
+  max-height: 30px;
   background-color: transparent;
   border: none;
   display: flex;

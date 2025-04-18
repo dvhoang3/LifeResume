@@ -1,4 +1,4 @@
-import { Editor, EditorContent, useEditor } from '@tiptap/react';
+import { Editor, EditorContent, JSONContent, useEditor } from '@tiptap/react';
 import styles from './ResumeEditor.module.css';
 import Document from '@tiptap/extension-document';
 import History from "@tiptap/extension-history";
@@ -21,6 +21,7 @@ import { MdFormatBold } from "react-icons/md";
 import { MdFormatItalic } from "react-icons/md";
 import { MdFormatUnderlined } from "react-icons/md";
 import FontDropdown, { fontOptions } from "./FontDropdown/FontDropdown";
+import { useEffect, useState } from "react";
 
 const iconSize: number = 18;
 
@@ -36,7 +37,9 @@ function ResumeEditor() {
       Strike,
       HorizontalRule,
       Text,
-      TextStyle,
+      TextStyle.configure({
+        mergeNestedSpanStyles: true,
+      }),
       FontFamily,
       Color,
       BulletList,
@@ -55,28 +58,42 @@ function ResumeEditor() {
         class: styles.editorContentContainer,
       },
     },
-  }) as Editor;
+    onSelectionUpdate({ editor, transaction }) {
+      const { from, to } = transaction.selection;
+      let editorFont: string | null = editor.getAttributes('textStyle').fontFamily ?? null;
 
-  const setEditorFontHandler = (font: string): void => {
-    editor.chain().focus().setFontFamily(font).run();
-  }
-  const getSelectedFont = (): string | null => {
-    const activeFont = fontOptions.find(font => editor.isActive('textStyle', { fontFamily: font })) ?? null;
-
-    if (!editor.getText().length && !activeFont) {
-      setEditorFontHandler(fontOptions[0]);
+      if (from === to) {
+        if (editorFont) {
+          setFont(editorFont);
+        }
+        else if (from === 1 && to === 1) {
+          setFont(fontOptions[0]);
+        }
+      }
+      else {
+        const activeFont = fontOptions.find(f => editor.isActive('textStyle', { fontFamily: f }));
+        if (!activeFont) {
+          setFont(null);
+        }
+      }
     }
-    return activeFont;
-  }
+  }) as Editor;
+  if (!editor) return null;
+
+  const [font, setFont] = useState<string | null>('Arial');
+  useEffect(() => {
+    editor.chain().focus().setFontFamily(font ?? '').run();
+  }, [font]);
 
   return (
     <>
       <div className={styles.editorContainer}>
         <div className={styles.toolbar}>
           <FontDropdown
-            setEditorFontHandler={setEditorFontHandler}
-            selectedFont={getSelectedFont()}
+            selectedFont={font}
+            setFont={setFont}
           />
+          <div className={styles.toolbarSpacer}></div>
           <button className={`${styles.toolbarButton} ${editor.isActive('bold') ? styles.isActive : ''}`}
             onClick={() => editor.chain().focus().toggleBold().run()}
           >
