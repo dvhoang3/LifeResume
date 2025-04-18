@@ -1,10 +1,10 @@
 import { Select } from "@base-ui-components/react";
 import { FaAngleDown, FaCheck } from "react-icons/fa";
-import styles from './FontDropdown.module.css'
+import styles from './FontDropdown.module.css';
 
 interface FontDropdownProps {
   selectedFont: string | null,
-  setFont: React.Dispatch<React.SetStateAction<string | null>>,
+  setFont: (font: string | null) => void,
 }
 
 export const fontOptions: string[] = [

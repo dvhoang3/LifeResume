@@ -1,4 +1,4 @@
-import { Editor, EditorContent, JSONContent, useEditor } from '@tiptap/react';
+import { Editor, EditorContent, useEditor } from '@tiptap/react';
 import styles from './ResumeEditor.module.css';
 import Document from '@tiptap/extension-document';
 import History from "@tiptap/extension-history";
@@ -22,6 +22,7 @@ import { MdFormatItalic } from "react-icons/md";
 import { MdFormatUnderlined } from "react-icons/md";
 import FontDropdown, { fontOptions } from "./FontDropdown/FontDropdown";
 import { useEffect, useState } from "react";
+import FontSizeInput from "./FontSizeInput/FontSizeInput";
 
 const iconSize: number = 18;
 
@@ -85,6 +86,17 @@ function ResumeEditor() {
     editor.chain().focus().setFontFamily(font ?? '').run();
   }, [font]);
 
+  const [fontSize, _setFontSize] = useState<number | null>(12);
+  const setFontSize = (size: number | null): void => {
+    _setFontSize((previousSize: number | null) => {
+      if (size == null) return previousSize;
+      return size;
+    });
+  }
+  useEffect(() => {
+    console.log(fontSize);
+  }, [fontSize])
+
   return (
     <>
       <div className={styles.editorContainer}>
@@ -92,6 +104,11 @@ function ResumeEditor() {
           <FontDropdown
             selectedFont={font}
             setFont={setFont}
+          />
+          <div className={styles.toolbarSpacer}></div>
+          <FontSizeInput
+            fontSize={fontSize}
+            setFontSize={setFontSize}
           />
           <div className={styles.toolbarSpacer}></div>
           <button className={`${styles.toolbarButton} ${editor.isActive('bold') ? styles.isActive : ''}`}
