@@ -6,7 +6,7 @@
 .group {
   display: flex;
   align-items: center;
-  gap: 3px;
+  gap: 6px;
   height: 100%;
 }
 
@@ -22,7 +22,7 @@
 }
 .input:focus {
   outline: none;
-  border: 2px solid rgb(111, 133, 197);
+  border: 1px solid #9e9c9c;
 }
 .input::selection {
   background-color: rgb(177, 211, 255);

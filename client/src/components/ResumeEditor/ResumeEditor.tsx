@@ -23,6 +23,7 @@ import { MdFormatUnderlined } from "react-icons/md";
 import FontDropdown, { fontOptions } from "./FontDropdown/FontDropdown";
 import { useEffect, useState } from "react";
 import FontSizeInput from "./FontSizeInput/FontSizeInput";
+import { FontSize } from "./custom-extensions/FontSize";
 
 const iconSize: number = 18;
 
@@ -38,11 +39,10 @@ function ResumeEditor() {
       Strike,
       HorizontalRule,
       Text,
-      TextStyle.configure({
-        mergeNestedSpanStyles: true,
-      }),
+      TextStyle,
       FontFamily,
       Color,
+      FontSize,
       BulletList,
       ListItem,
       Heading.configure({
@@ -61,41 +61,47 @@ function ResumeEditor() {
     },
     onSelectionUpdate({ editor, transaction }) {
       const { from, to } = transaction.selection;
-      let editorFont: string | null = editor.getAttributes('textStyle').fontFamily ?? null;
-
-      if (from === to) {
-        if (editorFont) {
-          setFont(editorFont);
-        }
-        else if (from === 1 && to === 1) {
-          setFont(fontOptions[0]);
-        }
-      }
-      else {
-        const activeFont = fontOptions.find(f => editor.isActive('textStyle', { fontFamily: f }));
-        if (!activeFont) {
-          setFont(null);
-        }
-      }
+      updateActiveFont(editor, from, to);
     }
   }) as Editor;
   if (!editor) return null;
 
   const [font, setFont] = useState<string | null>('Arial');
+
   useEffect(() => {
     editor.chain().focus().setFontFamily(font ?? '').run();
   }, [font]);
 
+  function updateActiveFont(editor: Editor, selectionStartPos: number, selectionEndPos: number): void {
+    let editorFont: string | null = editor.getAttributes('textStyle').fontFamily ?? null;
+
+    if (selectionStartPos === selectionEndPos) {
+      if (editorFont) {
+        setFont(editorFont);
+      }
+      else if (selectionStartPos === 1 && selectionEndPos === 1) {
+        setFont(fontOptions[0]);
+      }
+    }
+    else {
+      const activeFont = fontOptions.find(f => editor.isActive('textStyle', { fontFamily: f }));
+      if (!activeFont) {
+        setFont(null);
+      }
+    }
+  }
+
   const [fontSize, _setFontSize] = useState<number | null>(12);
-  const setFontSize = (size: number | null): void => {
+  function setFontSize(size: number | null): void {
     _setFontSize((previousSize: number | null) => {
       if (size == null) return previousSize;
       return size;
     });
   }
+
   useEffect(() => {
-    console.log(fontSize);
-  }, [fontSize])
+    editor.chain().focus().setFontSize(fontSize).run();
+  }, [fontSize]);
 
   return (
     <>
