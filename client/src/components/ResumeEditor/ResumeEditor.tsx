@@ -20,10 +20,11 @@ import HardBreak from '@tiptap/extension-hard-break'
 import { MdFormatBold } from "react-icons/md";
 import { MdFormatItalic } from "react-icons/md";
 import { MdFormatUnderlined } from "react-icons/md";
-import FontDropdown, { fontOptions } from "./FontDropdown/FontDropdown";
+import FontDropdown from "./FontDropdown/FontDropdown";
 import { useEffect, useState } from "react";
 import FontSizeInput from "./FontSizeInput/FontSizeInput";
 import { FontSize } from "./custom-extensions/FontSize";
+import { Node } from '@tiptap/pm/model';
 
 const iconSize: number = 18;
 
@@ -61,45 +62,58 @@ function ResumeEditor() {
     },
     onSelectionUpdate({ editor, transaction }) {
       const { from, to } = transaction.selection;
-      updateActiveFont(editor, from, to);
+      updateActiveTextStyles(editor, editor.state.doc, from, to);
     }
   }) as Editor;
   if (!editor) return null;
 
-  const [font, setFont] = useState<string | null>('Arial');
-
-  useEffect(() => {
-    editor.chain().focus().setFontFamily(font ?? '').run();
-  }, [font]);
-
-  function updateActiveFont(editor: Editor, selectionStartPos: number, selectionEndPos: number): void {
-    let editorFont: string | null = editor.getAttributes('textStyle').fontFamily ?? null;
-
+  function updateActiveTextStyles(editor: Editor, doc: Node, selectionStartPos: number, selectionEndPos: number): void {
     if (selectionStartPos === selectionEndPos) {
-      if (editorFont) {
-        setFont(editorFont);
-      }
-      else if (selectionStartPos === 1 && selectionEndPos === 1) {
-        setFont(fontOptions[0]);
-      }
+      const attrs = editor.getAttributes('textStyle');
+  
+      setFont(attrs.fontFamily ?? 'Arial');
+      setFontSize(attrs.fontSize  ?? 12);
+      return;
     }
-    else {
-      const activeFont = fontOptions.find(f => editor.isActive('textStyle', { fontFamily: f }));
-      if (!activeFont) {
-        setFont(null);
-      }
-    }
-  }
 
-  const [fontSize, _setFontSize] = useState<number | null>(12);
-  function setFontSize(size: number | null): void {
-    _setFontSize((previousSize: number | null) => {
-      if (size == null) return previousSize;
-      return size;
+    const appliedTextStyles: Map<string, Set<any>> = new Map<string, Set<any>>();
+
+    doc.nodesBetween(selectionStartPos, selectionEndPos, node => {
+      node.marks?.forEach(mark => {
+        if (mark.type.name !== 'textStyle') return;
+
+        Object.entries(mark.attrs).forEach(([key, value]) => {
+          if (value == null) return;
+
+          if (!appliedTextStyles.has(key)) {
+            appliedTextStyles.set(key, new Set<any>());
+          }
+          appliedTextStyles.get(key)!.add(value);
+        });
+      });
+    });
+    
+    const handlers: Record<string, (value: any) => void> = {
+      fontFamily: setFont,
+      fontSize: setFontSize,
+    };
+    appliedTextStyles.forEach((values, key) => {
+      const handler = handlers[key];
+      if (!handler) return;
+
+      handler(values.size === 1 ? [...values][0] : null);
     });
   }
 
+  const [font, setFont] = useState<string | null>('Arial');
   useEffect(() => {
+    if (font == null) return;
+    editor.chain().focus().setFontFamily(font).run();
+  }, [font]);
+
+  const [fontSize, setFontSize] = useState<number | null>(12);
+  useEffect(() => {
+    if (fontSize == null) return;
     editor.chain().focus().setFontSize(fontSize).run();
   }, [fontSize]);
 
