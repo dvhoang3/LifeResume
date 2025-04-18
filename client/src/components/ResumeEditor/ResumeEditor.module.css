@@ -48,6 +48,10 @@
   background-color: rgba(177, 211, 255, 0.3);
 }
 
+.editorContentWrapper {
+  position: relative;
+}
+
 .editorContentContainer {
   width: 21cm;
   min-height: 29.7cm;
