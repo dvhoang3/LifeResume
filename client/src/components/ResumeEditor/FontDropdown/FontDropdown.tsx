@@ -4,8 +4,8 @@ import styles from './FontDropdown.module.css';
 import ToolbarTooltip from "../ToolbarTooltip/ToolbarTooltip";
 
 interface FontDropdownProps {
-  selectedFont: string | null,
-  setFont: (font: string | null) => void,
+  displayedFont: string | null,
+  setActiveFont: (font: string) => void,
 }
 
 const fontOptions: string[] = [
@@ -22,13 +22,13 @@ const fontOptions: string[] = [
   'Verdana',
 ];
 
-function FontDropdown({ selectedFont, setFont }: FontDropdownProps) {  
+function FontDropdown({ displayedFont, setActiveFont }: FontDropdownProps) {  
   return (
     <>
-      <Select.Root value={selectedFont} onValueChange={(font) => setFont(font)}>
+      <Select.Root value={displayedFont} onValueChange={(font) => setActiveFont(font)}>
         <ToolbarTooltip tooltipText="Font">
           <Select.Trigger className={styles.trigger}>
-            <Select.Value style={{ fontFamily: selectedFont ?? '' }} className={styles.value} />
+            <Select.Value style={{ fontFamily: displayedFont ?? '' }} className={styles.value} />
             <Select.Icon>
               <FaAngleDown size={12} />
             </Select.Icon>

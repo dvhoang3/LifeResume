@@ -22,11 +22,12 @@ import FontDropdown from "./FontDropdown/FontDropdown";
 import { useEffect, useState } from "react";
 import FontSizeInput from "./FontSizeInput/FontSizeInput";
 import { FontSize } from "./custom-extensions/FontSize";
-import { Node } from '@tiptap/pm/model';
+import { Attrs, Node } from '@tiptap/pm/model';
 import { OnBlurHighlight } from './custom-extensions/OnBlurHighlight';
 import OrderedList from '@tiptap/extension-ordered-list';
 import { BiRedo, BiUndo } from "react-icons/bi";
 import ToolbarTooltip from "./ToolbarTooltip/ToolbarTooltip";
+import { findClosestTextNode } from "./utilities/prosemirror-utils";
 
 const iconSize: number = 18;
 
@@ -64,6 +65,9 @@ function ResumeEditor() {
       const { from, to } = transaction.selection;
       updateActiveTextStyles(editor, editor.state.doc, from, to);
     },
+    onCreate({ editor }) {
+      updateActiveTextStyles(editor, editor.state.doc, 1, 1);
+    },
     onUpdate({ editor }) {
       console.log(editor.getHTML())
     }
@@ -71,86 +75,128 @@ function ResumeEditor() {
   if (!editor) return null;
 
   function updateActiveTextStyles(editor: Editor, doc: Node, selectionStartPos: number, selectionEndPos: number): void {
+    const nodes: {node: Node, parent: Node}[] = [];
     if (selectionStartPos === selectionEndPos) {
-      const attrs = editor.getAttributes('textStyle');
-
-      setFont(attrs.fontFamily ?? 'Arial');
-      setFontSize(attrs.fontSize ?? 12);
-      return;
+      const { node, parent } = findClosestTextNode(editor.state.doc.resolve(selectionStartPos));
+      if (node && parent && node.isText) {
+        nodes.push({ node, parent });
+      }
+    }
+    else {
+      doc.nodesBetween(selectionStartPos, selectionEndPos, (node, _, parent) => {
+        if (node && parent && node.isText) {
+          nodes.push({ node, parent });
+        }
+      });
     }
 
-    const appliedTextStyles: Map<string, Set<any>> = new Map<string, Set<any>>();
+    const activeStylesProperties: Map<string, any> = new Map<string, any>();
+    [...getActiveStylesFromNodes(nodes).entries()].forEach(([key, values]) => {
+      const style = values.size === 1 ? [...values][0] : null;
+      activeStylesProperties.set(key, style);
+    });
+    
+    if (selectionStartPos === selectionEndPos) {
+      setActiveFont(activeStylesProperties.get('fontFamily') ?? 'Arial');
+      setActiveFontSize(activeStylesProperties.get('fontSize') ?? 12);
+    }
+    else {
+      setDisplayedFont(activeStylesProperties.get('fontFamily') ?? null);
+      setDisplayedFontSize(activeStylesProperties.get('fontSize') ?? null);
+    }
+  }
 
-    doc.nodesBetween(selectionStartPos, selectionEndPos, node => {
+  function getActiveStylesFromNodes(nodes: {node: Node, parent: Node}[]): Map<string, Set<any>> {
+    const activeStyles: Map<string, Set<any>> = new Map<string, Set<any>>();
+
+    nodes.forEach(({node, parent}) => {
+      Object.entries(parent.attrs).forEach(([key, value]) => {
+        if (value == null) return;
+
+        if (!activeStyles.has(key)) {
+          activeStyles.set(key, new Set<any>());
+        }
+        activeStyles.get(key)!.add(value);
+      });
+
       node.marks?.forEach(mark => {
         if (mark.type.name !== 'textStyle') return;
-
         Object.entries(mark.attrs).forEach(([key, value]) => {
           if (value == null) return;
 
-          if (!appliedTextStyles.has(key)) {
-            appliedTextStyles.set(key, new Set<any>());
+          if (!activeStyles.has(key)) {
+            activeStyles.set(key, new Set<any>());
           }
-          appliedTextStyles.get(key)!.add(value);
+          activeStyles.get(key)!.add(value);
         });
       });
     });
 
-    const handlers: Record<string, (value: any) => void> = {
-      fontFamily: setFont,
-      fontSize: setFontSize,
-    };
-    appliedTextStyles.forEach((values, key) => {
-      const handler = handlers[key];
-      if (!handler) return;
-
-      handler(values.size === 1 ? [...values][0] : null);
-    });
+    return activeStyles;
   }
 
-  const [font, setFont] = useState<string | null>(null);
-  useEffect(() => {
-    if (font == null) return;
+  const [displayedFont, setDisplayedFont] = useState<string | null>(null);
+  function setActiveFont(font: string): void {
     editor.chain().focus().setFontFamily(font).run();
-  }, [font]);
-
-  const [fontSize, _setFontSize] = useState<number | null>(null);
-  function setFontSize(fontSize: number | null): void {
-    _setFontSize(fontSize ? Math.min(Math.max(fontSize, 1), 400) : null);
+    setDisplayedFont(font);
   }
-  useEffect(() => {
-    editor.chain().focus().setFontSize(fontSize).run();
-  }, [fontSize]);
+
+  const [displayedFontSize, setDisplayedFontSize] = useState<number | null>(null);
+  function setActiveFontSize(fontSize: number | null): void {
+    if (fontSize === null) return;
+
+    const boundedFontSize = Math.min(Math.max(fontSize, 1), 400);
+    editor.chain().focus().setFontSize(boundedFontSize).run();
+    setDisplayedFontSize(boundedFontSize);
+  }
   function handleDecrementFontSizes(): void {
-    if (fontSize != null) return;
+    if (displayedFontSize !== null) {
+      const boundedFontSize = Math.min(Math.max(displayedFontSize - 1, 1), 400);
+      setDisplayedFontSize(boundedFontSize);
+    };
+
     editor.chain().focus().run();
     editor.commands.decrementFontSize();
   }
   function handleIncrementFontSizes(): void {
-    if (fontSize != null) return;
+    if (displayedFontSize !== null) {
+      const boundedFontSize = Math.min(Math.max(displayedFontSize + 1, 1), 400);
+      setDisplayedFontSize(boundedFontSize);
+    }
+    
     editor.chain().focus().run();
     editor.commands.incrementFontSize();
   }
+
+
+  // const [fontSize, _setFontSize] = useState<number | null>(null);
+  // function setFontSize(fontSize: number | null): void {
+  //   _setFontSize(fontSize ? Math.min(Math.max(fontSize, 1), 400) : null);
+  // }
+  // useEffect(() => {
+  //   editor.chain().focus().setFontSize(fontSize).run();
+  // }, [fontSize]);
   
-  const [textAlign, setTextAlign] = useState<'left' | 'center' | 'right' | 'justify'>('left');
-  useEffect(() => {
-    editor.chain().focus().setTextAlign(textAlign).run();
-  }, [textAlign]);
+  
+  // const [textAlign, setTextAlign] = useState<'left' | 'center' | 'right' | 'justify'>('left');
+  // useEffect(() => {
+  //   editor.chain().focus().setTextAlign(textAlign).run();
+  // }, [textAlign]);
 
-  useEffect(() => {
-    setupActiveToolbarOptions();
-  }, []);
-  function setupActiveToolbarOptions(): void {
-    setFont('Arial');
-    setFontSize(12);
-    setTextAlign('left');
-  }
+  // useEffect(() => {
+  //   setupActiveToolbarOptions();
+  // }, []);
+  // function setupActiveToolbarOptions(): void {
+  //   setFont('Arial');
+  //   setFontSize(12);
+  //   setTextAlign('left');
+  // }
 
-  function insertHorizontalLine(): void {
-    editor.chain().focus()
-      .setHorizontalRule()
-      .run();
-  }
+  // function insertHorizontalLine(): void {
+  //   editor.chain().focus()
+  //     .setHorizontalRule()
+  //     .run();
+  // }
 
   return (
     <>
@@ -168,18 +214,18 @@ function ResumeEditor() {
           </ToolbarTooltip>
           <div className={styles.toolbarSpacer}></div>
           <FontDropdown
-            selectedFont={font}
-            setFont={setFont}
+            displayedFont={displayedFont}
+            setActiveFont={setActiveFont}
           />
           <div className={styles.toolbarSpacer}></div>
           <FontSizeInput
-            fontSize={fontSize}
-            setFontSize={setFontSize}
+            displayedFontSize={displayedFontSize}
+            setActiveFontSize={setActiveFontSize}
             handleDecrementFontSizes={handleDecrementFontSizes}
             handleIncrementFontSizes={handleIncrementFontSizes}
           />
           <div className={styles.toolbarSpacer}></div>
-          <ToolbarTooltip tooltipText="Bold (Ctrl+B)">
+          {/* <ToolbarTooltip tooltipText="Bold (Ctrl+B)">
             <button className={`${styles.toolbarButton} ${editor.isActive('bold') ? styles.isActive : ''}`}
               onClick={() => editor.chain().focus().toggleBold().run()}
             >
@@ -251,7 +297,7 @@ function ResumeEditor() {
             >
               <MdOutlineHorizontalRule size={iconSize} />
             </button>
-          </ToolbarTooltip>
+          </ToolbarTooltip> */}
         </div>
         <div className={styles.editorContentWrapper}>
           <EditorContent editor={editor} />
