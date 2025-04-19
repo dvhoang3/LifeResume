@@ -11,12 +11,11 @@ import HorizontalRule from '@tiptap/extension-horizontal-rule';
 import Text from '@tiptap/extension-text';
 import BulletList from '@tiptap/extension-bullet-list';
 import ListItem from '@tiptap/extension-list-item';
-import Heading from '@tiptap/extension-heading';
 import TextStyle from '@tiptap/extension-text-style';
 import FontFamily from '@tiptap/extension-font-family';
 import TextAlign from '@tiptap/extension-text-align';
 import HardBreak from '@tiptap/extension-hard-break'
-import { MdFormatAlignCenter, MdFormatAlignJustify, MdFormatAlignLeft, MdFormatAlignRight, MdFormatBold, MdFormatListBulleted, MdFormatListNumbered } from "react-icons/md";
+import { MdFormatAlignCenter, MdFormatAlignJustify, MdFormatAlignLeft, MdFormatAlignRight, MdFormatBold, MdFormatListBulleted, MdFormatListNumbered, MdOutlineHorizontalRule } from "react-icons/md";
 import { MdFormatItalic } from "react-icons/md";
 import { MdFormatUnderlined } from "react-icons/md";
 import FontDropdown from "./FontDropdown/FontDropdown";
@@ -48,7 +47,6 @@ function ResumeEditor() {
       BulletList,
       OrderedList,
       ListItem,
-      Heading,
       TextAlign.configure({
         types: ['heading', 'paragraph'],
         defaultAlignment: 'left',
@@ -66,6 +64,9 @@ function ResumeEditor() {
       const { from, to } = transaction.selection;
       updateActiveTextStyles(editor, editor.state.doc, from, to);
     },
+    onUpdate({ editor }) {
+      console.log(editor.getHTML())
+    }
   }) as Editor;
   if (!editor) return null;
 
@@ -143,6 +144,12 @@ function ResumeEditor() {
     setFont('Arial');
     setFontSize(12);
     setTextAlign('left');
+  }
+
+  function insertHorizontalLine(): void {
+    editor.chain().focus()
+      .setHorizontalRule()
+      .run();
   }
 
   return (
@@ -235,6 +242,14 @@ function ResumeEditor() {
               onClick={() => editor.chain().focus().toggleOrderedList().run()}
             >
               <MdFormatListNumbered size={iconSize} />
+            </button>
+          </ToolbarTooltip>
+          <div className={styles.toolbarSpacer}></div>
+          <ToolbarTooltip tooltipText="Horizontal Line">
+            <button className={styles.toolbarButton}
+              onClick={() => insertHorizontalLine()}
+            >
+              <MdOutlineHorizontalRule size={iconSize} />
             </button>
           </ToolbarTooltip>
         </div>

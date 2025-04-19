@@ -8,7 +8,7 @@ interface FontDropdownProps {
   setFont: (font: string | null) => void,
 }
 
-export const fontOptions: string[] = [
+const fontOptions: string[] = [
   'Arial',
   'Arial Narrow',
   'Book Antiqua',
@@ -37,7 +37,6 @@ function FontDropdown({ selectedFont, setFont }: FontDropdownProps) {
 
         <Select.Portal>
           <Select.Positioner sideOffset={3} align="start">
-            <Select.ScrollUpArrow />
             <Select.Popup className={styles.popup}>
               {fontOptions.map((font: string) =>
                 <Select.Item className={styles.item} value={font} key={font}>
@@ -50,7 +49,6 @@ function FontDropdown({ selectedFont, setFont }: FontDropdownProps) {
                 </Select.Item>
               )}
             </Select.Popup>
-            <Select.ScrollDownArrow />
           </Select.Positioner>
         </Select.Portal>
       </Select.Root>
