@@ -4,7 +4,7 @@
   justify-content: space-between;
   gap: 0.25em;
   padding: 0.25em 0.75em;
-  min-width: 120px;
+  width: 100px;
   height: 100%;
   max-height: 30px;
   border-radius: 4px;
@@ -19,6 +19,13 @@
 }
 .trigger:focus-visible {
   outline: none;
+}
+
+.value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-wrap: nowrap;
+  font-size: 16px;
 }
 
 .popup {
@@ -36,11 +43,13 @@
   display: grid;
   grid-template-columns: 0.75em 1fr;
   gap: 0.25em;
-  padding: 0.25em 0.5em;
-  width: var(--anchor-width);
+  padding-block: 0.5em;
+  padding-left: 0.75em;
+  padding-right: 3em;
+  min-width: var(--anchor-width);
+  width: 100%;
   gap: 0.5em;
   font-size: 15px;
-  padding: 0.5em 0.25em;
   user-select: none;
   cursor: pointer;
 }

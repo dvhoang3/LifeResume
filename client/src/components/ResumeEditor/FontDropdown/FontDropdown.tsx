@@ -1,6 +1,7 @@
 import { Select } from "@base-ui-components/react";
 import { FaAngleDown, FaCheck } from "react-icons/fa";
 import styles from './FontDropdown.module.css';
+import ToolbarTooltip from "../ToolbarTooltip/ToolbarTooltip";
 
 interface FontDropdownProps {
   selectedFont: string | null,
@@ -25,15 +26,17 @@ function FontDropdown({ selectedFont, setFont }: FontDropdownProps) {
   return (
     <>
       <Select.Root value={selectedFont} onValueChange={(font) => setFont(font)}>
-        <Select.Trigger className={styles.trigger}>
-          <Select.Value />
-          <Select.Icon>
-            <FaAngleDown size={12} />
-          </Select.Icon>
-        </Select.Trigger>
+        <ToolbarTooltip tooltipText="Font">
+          <Select.Trigger className={styles.trigger}>
+            <Select.Value style={{ fontFamily: selectedFont ?? '' }} className={styles.value} />
+            <Select.Icon>
+              <FaAngleDown size={12} />
+            </Select.Icon>
+          </Select.Trigger>
+        </ToolbarTooltip>
 
         <Select.Portal>
-          <Select.Positioner sideOffset={3}>
+          <Select.Positioner sideOffset={3} align="start">
             <Select.ScrollUpArrow />
             <Select.Popup className={styles.popup}>
               {fontOptions.map((font: string) =>
@@ -41,7 +44,7 @@ function FontDropdown({ selectedFont, setFont }: FontDropdownProps) {
                   <Select.ItemIndicator className={styles.itemIndicator}>
                     <FaCheck size={12} />
                   </Select.ItemIndicator>
-                  <Select.ItemText className={styles.itemText}>
+                  <Select.ItemText className={styles.itemText} style={{ fontFamily: font }}>
                     {font}
                   </Select.ItemText>
                 </Select.Item>

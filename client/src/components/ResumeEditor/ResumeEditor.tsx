@@ -7,7 +7,6 @@ import Paragraph from '@tiptap/extension-paragraph';
 import Bold from '@tiptap/extension-bold';
 import Italic from '@tiptap/extension-italic';
 import Underline from '@tiptap/extension-underline';
-import Strike from '@tiptap/extension-strike';
 import HorizontalRule from '@tiptap/extension-horizontal-rule';
 import Text from '@tiptap/extension-text';
 import BulletList from '@tiptap/extension-bullet-list';
@@ -15,7 +14,6 @@ import ListItem from '@tiptap/extension-list-item';
 import Heading from '@tiptap/extension-heading';
 import TextStyle from '@tiptap/extension-text-style';
 import FontFamily from '@tiptap/extension-font-family';
-import Color from '@tiptap/extension-color';
 import TextAlign from '@tiptap/extension-text-align';
 import HardBreak from '@tiptap/extension-hard-break'
 import { MdFormatAlignCenter, MdFormatAlignJustify, MdFormatAlignLeft, MdFormatAlignRight, MdFormatBold, MdFormatListBulleted, MdFormatListNumbered } from "react-icons/md";
@@ -28,6 +26,8 @@ import { FontSize } from "./custom-extensions/FontSize";
 import { Node } from '@tiptap/pm/model';
 import { OnBlurHighlight } from './custom-extensions/OnBlurHighlight';
 import OrderedList from '@tiptap/extension-ordered-list';
+import { BiRedo, BiUndo } from "react-icons/bi";
+import ToolbarTooltip from "./ToolbarTooltip/ToolbarTooltip";
 
 const iconSize: number = 18;
 
@@ -40,19 +40,15 @@ function ResumeEditor() {
       Bold,
       Italic,
       Underline,
-      Strike,
       HorizontalRule,
       Text,
       TextStyle,
       FontFamily,
-      Color,
       FontSize,
       BulletList,
       OrderedList,
       ListItem,
-      Heading.configure({
-        levels: [1, 2, 3],
-      }),
+      Heading,
       TextAlign.configure({
         types: ['heading', 'paragraph'],
         defaultAlignment: 'left',
@@ -76,9 +72,9 @@ function ResumeEditor() {
   function updateActiveTextStyles(editor: Editor, doc: Node, selectionStartPos: number, selectionEndPos: number): void {
     if (selectionStartPos === selectionEndPos) {
       const attrs = editor.getAttributes('textStyle');
-  
+
       setFont(attrs.fontFamily ?? 'Arial');
-      setFontSize(attrs.fontSize  ?? 12);
+      setFontSize(attrs.fontSize ?? 12);
       return;
     }
 
@@ -98,7 +94,7 @@ function ResumeEditor() {
         });
       });
     });
-    
+
     const handlers: Record<string, (value: any) => void> = {
       fontFamily: setFont,
       fontSize: setFontSize,
@@ -117,12 +113,24 @@ function ResumeEditor() {
     editor.chain().focus().setFontFamily(font).run();
   }, [font]);
 
-  const [fontSize, setFontSize] = useState<number | null>(null);
+  const [fontSize, _setFontSize] = useState<number | null>(null);
+  function setFontSize(fontSize: number | null): void {
+    _setFontSize(fontSize ? Math.min(Math.max(fontSize, 1), 400) : null);
+  }
   useEffect(() => {
-    if (fontSize == null) return;
     editor.chain().focus().setFontSize(fontSize).run();
   }, [fontSize]);
-
+  function handleDecrementFontSizes(): void {
+    if (fontSize != null) return;
+    editor.chain().focus().run();
+    editor.commands.decrementFontSize();
+  }
+  function handleIncrementFontSizes(): void {
+    if (fontSize != null) return;
+    editor.chain().focus().run();
+    editor.commands.incrementFontSize();
+  }
+  
   const [textAlign, setTextAlign] = useState<'left' | 'center' | 'right' | 'justify'>('left');
   useEffect(() => {
     editor.chain().focus().setTextAlign(textAlign).run();
@@ -141,6 +149,17 @@ function ResumeEditor() {
     <>
       <div className={styles.editorContainer}>
         <div className={styles.toolbar}>
+          <ToolbarTooltip tooltipText="Undo (Ctrl+Z)">
+            <button className={styles.toolbarButton} onClick={() => editor.chain().focus().undo().run()}>
+              <BiUndo size={iconSize} />
+            </button>
+          </ToolbarTooltip>
+          <ToolbarTooltip tooltipText="Redo (Ctrl+Y)">
+            <button className={styles.toolbarButton} onClick={() => editor.chain().focus().redo().run()}>
+              <BiRedo size={iconSize} />
+            </button>
+          </ToolbarTooltip>
+          <div className={styles.toolbarSpacer}></div>
           <FontDropdown
             selectedFont={font}
             setFont={setFont}
@@ -149,55 +168,75 @@ function ResumeEditor() {
           <FontSizeInput
             fontSize={fontSize}
             setFontSize={setFontSize}
+            handleDecrementFontSizes={handleDecrementFontSizes}
+            handleIncrementFontSizes={handleIncrementFontSizes}
           />
           <div className={styles.toolbarSpacer}></div>
-          <button className={`${styles.toolbarButton} ${editor.isActive('bold') ? styles.isActive : ''}`}
-            onClick={() => editor.chain().focus().toggleBold().run()}
-          >
-            <MdFormatBold size={iconSize} />
-          </button>
-          <button className={`${styles.toolbarButton} ${editor.isActive('italic') ? styles.isActive : ''}`}
-            onClick={() => editor.chain().focus().toggleItalic().run()}
-          >
-            <MdFormatItalic size={iconSize} />
-          </button>
-          <button className={`${styles.toolbarButton} ${editor.isActive('underline') ? styles.isActive : ''}`}
-            onClick={() => editor.chain().focus().toggleUnderline().run()}
-          >
-            <MdFormatUnderlined size={iconSize} />
-          </button>
+          <ToolbarTooltip tooltipText="Bold (Ctrl+B)">
+            <button className={`${styles.toolbarButton} ${editor.isActive('bold') ? styles.isActive : ''}`}
+              onClick={() => editor.chain().focus().toggleBold().run()}
+            >
+              <MdFormatBold size={iconSize} />
+            </button>
+          </ToolbarTooltip>
+          <ToolbarTooltip tooltipText="Italic (Ctrl+I)">
+            <button className={`${styles.toolbarButton} ${editor.isActive('italic') ? styles.isActive : ''}`}
+              onClick={() => editor.chain().focus().toggleItalic().run()}
+            >
+              <MdFormatItalic size={iconSize} />
+            </button>
+          </ToolbarTooltip>
+          <ToolbarTooltip tooltipText="Underline (Ctrl+U)">
+            <button className={`${styles.toolbarButton} ${editor.isActive('underline') ? styles.isActive : ''}`}
+              onClick={() => editor.chain().focus().toggleUnderline().run()}
+            >
+              <MdFormatUnderlined size={iconSize} />
+            </button>
+          </ToolbarTooltip>
           <div className={styles.toolbarSpacer}></div>
-          <button className={`${styles.toolbarButton} ${editor.isActive({ textAlign: 'left' }) ? styles.isActive : ''}`}
-            onClick={() => setTextAlign('left')}
-          >
-            <MdFormatAlignLeft size={iconSize} />
-          </button>
-          <button className={`${styles.toolbarButton} ${editor.isActive({ textAlign: 'center' }) ? styles.isActive : ''}`}
-            onClick={() => setTextAlign('center')}
-          >
-            <MdFormatAlignCenter size={iconSize} />
-          </button>
-          <button className={`${styles.toolbarButton} ${editor.isActive({ textAlign: 'right' }) ? styles.isActive : ''}`}
-            onClick={() => setTextAlign('right')}
-          >
-            <MdFormatAlignRight size={iconSize} />
-          </button>
-          <button className={`${styles.toolbarButton} ${editor.isActive({ textAlign: 'justify' }) ? styles.isActive : ''}`}
-            onClick={() => setTextAlign('justify')}
-          >
-            <MdFormatAlignJustify size={iconSize} />
-          </button>
+          <ToolbarTooltip tooltipText="Left Align (Ctrl+Shift+L)">
+            <button className={`${styles.toolbarButton} ${editor.isActive({ textAlign: 'left' }) ? styles.isActive : ''}`}
+              onClick={() => setTextAlign('left')}
+            >
+              <MdFormatAlignLeft size={iconSize} />
+            </button>
+          </ToolbarTooltip>
+          <ToolbarTooltip tooltipText="Center Align (Ctrl+Shift+E)">
+            <button className={`${styles.toolbarButton} ${editor.isActive({ textAlign: 'center' }) ? styles.isActive : ''}`}
+              onClick={() => setTextAlign('center')}
+            >
+              <MdFormatAlignCenter size={iconSize} />
+            </button>
+          </ToolbarTooltip>
+          <ToolbarTooltip tooltipText="Right Align (Ctrl+Shift+R)">
+            <button className={`${styles.toolbarButton} ${editor.isActive({ textAlign: 'right' }) ? styles.isActive : ''}`}
+              onClick={() => setTextAlign('right')}
+            >
+              <MdFormatAlignRight size={iconSize} />
+            </button>
+          </ToolbarTooltip>
+          <ToolbarTooltip tooltipText="Justify (Ctrl+Shift+J)">
+            <button className={`${styles.toolbarButton} ${editor.isActive({ textAlign: 'justify' }) ? styles.isActive : ''}`}
+              onClick={() => setTextAlign('justify')}
+            >
+              <MdFormatAlignJustify size={iconSize} />
+            </button>
+          </ToolbarTooltip>
           <div className={styles.toolbarSpacer}></div>
-          <button className={`${styles.toolbarButton} ${editor.isActive('bulletList') ? styles.isActive : ''}`}
-            onClick={() => editor.chain().focus().toggleBulletList().run()}
-          >
-            <MdFormatListBulleted size={iconSize} />
-          </button>
-          <button className={`${styles.toolbarButton} ${editor.isActive('orderedList') ? styles.isActive : ''}`}
-            onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          >
-            <MdFormatListNumbered size={iconSize} />
-          </button>
+          <ToolbarTooltip tooltipText="Bulleted List (Ctrl+Shift+8)">
+            <button className={`${styles.toolbarButton} ${editor.isActive('bulletList') ? styles.isActive : ''}`}
+              onClick={() => editor.chain().focus().toggleBulletList().run()}
+            >
+              <MdFormatListBulleted size={iconSize} />
+            </button>
+          </ToolbarTooltip>
+          <ToolbarTooltip tooltipText="Numbered List (Ctrl+Shift+7)">
+            <button className={`${styles.toolbarButton} ${editor.isActive('orderedList') ? styles.isActive : ''}`}
+              onClick={() => editor.chain().focus().toggleOrderedList().run()}
+            >
+              <MdFormatListNumbered size={iconSize} />
+            </button>
+          </ToolbarTooltip>
         </div>
         <div className={styles.editorContentWrapper}>
           <EditorContent editor={editor} />

@@ -9,6 +9,7 @@ export type FontSizeOptions = {
    * @example ['heading', 'paragraph']
    */
   types: string[],
+  defaultSize: number,
 }
 
 declare module '@tiptap/core' {
@@ -25,6 +26,16 @@ declare module '@tiptap/core' {
        * @example editor.commands.unsetFontSize()
        */
       unsetFontSize: () => ReturnType,
+      /**
+       * Increments the font size by 1
+       * @returns editor.commands.incrementFontSize()
+       */
+      incrementFontSize: () => ReturnType,
+      /**
+       * Decrements the font size by 1
+       * @returns editor.commands.decrementFontSize()
+       */
+      decrementFontSize: () => ReturnType,
     }
   }
 }
@@ -38,6 +49,7 @@ export const FontSize = Extension.create<FontSizeOptions>({
   addOptions() {
     return {
       types: ['textStyle'],
+      defaultSize: 12,
     }
   },
 
@@ -67,16 +79,118 @@ export const FontSize = Extension.create<FontSizeOptions>({
   addCommands() {
     return {
       setFontSize: fontSize => ({ chain }: CommandProps) => {
+        if (!fontSize || fontSize < 1) return false;
+
         return chain()
           .setMark('textStyle', { fontSize })
-          .run()
+          .run();
       },
       unsetFontSize: () => ({ chain }: CommandProps) => {
         return chain()
           .setMark('textStyle', { fontSize: null })
           .removeEmptyTextStyle()
-          .run()
+          .run();
       },
+
+      incrementFontSize:
+        () =>
+          ({ state, dispatch }: CommandProps) => {
+            if (!dispatch) {
+              return false;
+            }
+
+            let tr = state.tr;
+            const { schema } = state;
+            const { from, to } = state.selection;
+
+            state.doc.nodesBetween(from, to, (node, pos) => {
+              if (!node.isText) {
+                return;
+              }
+
+              const nodeStart = pos;
+              const nodeEnd = pos + node.nodeSize;
+              const start = Math.max(nodeStart, from);
+              const end = Math.min(nodeEnd, to);
+
+              if (start >= end) {
+                return;
+              }
+
+              const tsMark = node.marks.find(
+                (m) => m.type === schema.marks.textStyle,
+              );
+              const curr = (tsMark?.attrs.fontSize as number) ?? this.options.defaultSize;
+              const next = Math.min(400, curr + 1);
+
+              tr = tr.removeMark(start, end, schema.marks.textStyle);
+              tr = tr.addMark(
+                start,
+                end,
+                schema.marks.textStyle.create({ fontSize: next }),
+              );
+            });
+
+            if (tr.docChanged) {
+              dispatch(tr.scrollIntoView());
+              return true;
+            }
+            return false;
+          },
+
+      decrementFontSize:
+        () =>
+          ({ state, dispatch }: CommandProps) => {
+            if (!dispatch) {
+              return false;
+            }
+
+            let tr = state.tr;
+            const { schema } = state;
+            const { from, to } = state.selection;
+
+            state.doc.nodesBetween(from, to, (node, pos) => {
+              if (!node.isText) {
+                return;
+              }
+
+              const nodeStart = pos;
+              const nodeEnd = pos + node.nodeSize;
+              const start = Math.max(nodeStart, from);
+              const end = Math.min(nodeEnd, to);
+
+              if (start >= end) {
+                return;
+              }
+
+              const tsMark = node.marks.find(
+                (m) => m.type === schema.marks.textStyle,
+              );
+              const curr = (tsMark?.attrs.fontSize as number) ?? this.options.defaultSize;
+              const next = Math.max(1, curr - 1);
+
+              tr = tr.removeMark(start, end, schema.marks.textStyle);
+              tr = tr.addMark(
+                start,
+                end,
+                schema.marks.textStyle.create({ fontSize: next }),
+              );
+            });
+
+            if (tr.docChanged) {
+              dispatch(tr.scrollIntoView());
+              return true;
+            }
+            return false;
+          },
+
     }
   },
+
+  addKeyboardShortcuts() {
+    return {
+      'Mod-Shift-,': () => this.editor.commands.decrementFontSize(),
+      'Mod-Shift-.': () => this.editor.commands.incrementFontSize(),
+    }
+  }
 })
