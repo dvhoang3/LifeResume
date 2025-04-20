@@ -22,12 +22,11 @@ import FontDropdown from "./FontDropdown/FontDropdown";
 import { useEffect, useState } from "react";
 import FontSizeInput from "./FontSizeInput/FontSizeInput";
 import { FontSize } from "./custom-extensions/FontSize";
-import { Attrs, Node } from '@tiptap/pm/model';
+import { Node } from '@tiptap/pm/model';
 import { OnBlurHighlight } from './custom-extensions/OnBlurHighlight';
 import OrderedList from '@tiptap/extension-ordered-list';
 import { BiRedo, BiUndo } from "react-icons/bi";
 import ToolbarTooltip from "./ToolbarTooltip/ToolbarTooltip";
-import { findClosestTextNode } from "./utilities/prosemirror-utils";
 
 const iconSize: number = 18;
 
@@ -63,21 +62,36 @@ function ResumeEditor() {
     },
     onSelectionUpdate({ editor, transaction }) {
       const { from, to } = transaction.selection;
-      updateActiveTextStyles(editor, editor.state.doc, from, to);
+      updateActiveTextStyles(editor.state.doc, from, to);
     },
     onCreate({ editor }) {
-      updateActiveTextStyles(editor, editor.state.doc, 1, 1);
+      updateActiveTextStyles(editor.state.doc, 1, 1);
     },
-    onUpdate({ editor }) {
-      console.log(editor.getHTML())
-    }
   }) as Editor;
   if (!editor) return null;
 
-  function updateActiveTextStyles(editor: Editor, doc: Node, selectionStartPos: number, selectionEndPos: number): void {
+  function findClosestTextNode(doc: Node, pos: number): { node: Node | null, parent: Node | null } {
+    let node: Node | null = null;
+    let parent: Node | null = null;
+    while (!node && pos >= 0) {
+      const nodeAtPos = doc.nodeAt(pos);
+      if (nodeAtPos?.isText) {
+        node = nodeAtPos;
+      }
+      pos--;
+    }
+
+    if (node != null) {
+      parent = editor.state.doc.resolve(pos + 1).parent;
+    }
+
+    return { node, parent };
+  }
+
+  function updateActiveTextStyles(doc: Node, selectionStartPos: number, selectionEndPos: number): void {
     const nodes: {node: Node, parent: Node}[] = [];
     if (selectionStartPos === selectionEndPos) {
-      const { node, parent } = findClosestTextNode(editor.state.doc.resolve(selectionStartPos));
+      const { node, parent } = findClosestTextNode(doc, selectionStartPos);
       if (node && parent && node.isText) {
         nodes.push({ node, parent });
       }
@@ -167,36 +181,17 @@ function ResumeEditor() {
     editor.chain().focus().run();
     editor.commands.incrementFontSize();
   }
-
-
-  // const [fontSize, _setFontSize] = useState<number | null>(null);
-  // function setFontSize(fontSize: number | null): void {
-  //   _setFontSize(fontSize ? Math.min(Math.max(fontSize, 1), 400) : null);
-  // }
-  // useEffect(() => {
-  //   editor.chain().focus().setFontSize(fontSize).run();
-  // }, [fontSize]);
   
-  
-  // const [textAlign, setTextAlign] = useState<'left' | 'center' | 'right' | 'justify'>('left');
-  // useEffect(() => {
-  //   editor.chain().focus().setTextAlign(textAlign).run();
-  // }, [textAlign]);
+  const [textAlign, setTextAlign] = useState<'left' | 'center' | 'right' | 'justify'>('left');
+  useEffect(() => {
+    editor.chain().focus().setTextAlign(textAlign).run();
+  }, [textAlign]);
 
-  // useEffect(() => {
-  //   setupActiveToolbarOptions();
-  // }, []);
-  // function setupActiveToolbarOptions(): void {
-  //   setFont('Arial');
-  //   setFontSize(12);
-  //   setTextAlign('left');
-  // }
-
-  // function insertHorizontalLine(): void {
-  //   editor.chain().focus()
-  //     .setHorizontalRule()
-  //     .run();
-  // }
+  function insertHorizontalLine(): void {
+    editor.chain().focus()
+      .setHorizontalRule()
+      .run();
+  }
 
   return (
     <>
@@ -225,7 +220,7 @@ function ResumeEditor() {
             handleIncrementFontSizes={handleIncrementFontSizes}
           />
           <div className={styles.toolbarSpacer}></div>
-          {/* <ToolbarTooltip tooltipText="Bold (Ctrl+B)">
+          <ToolbarTooltip tooltipText="Bold (Ctrl+B)">
             <button className={`${styles.toolbarButton} ${editor.isActive('bold') ? styles.isActive : ''}`}
               onClick={() => editor.chain().focus().toggleBold().run()}
             >
@@ -297,7 +292,7 @@ function ResumeEditor() {
             >
               <MdOutlineHorizontalRule size={iconSize} />
             </button>
-          </ToolbarTooltip> */}
+          </ToolbarTooltip>
         </div>
         <div className={styles.editorContentWrapper}>
           <EditorContent editor={editor} />

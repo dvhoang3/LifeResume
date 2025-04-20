@@ -2,7 +2,6 @@ import { NumberField } from "@base-ui-components/react";
 import { FaMinus, FaPlus } from "react-icons/fa";
 import styles from './FontSizeInpput.module.css';
 import ToolbarTooltip from "../ToolbarTooltip/ToolbarTooltip";
-import { useState } from "react";
 
 interface FontSizeInputProps {
   displayedFontSize: number | null;
@@ -17,17 +16,14 @@ function FontSizeInput({ displayedFontSize, setActiveFontSize, handleDecrementFo
     
     e.currentTarget.blur();
   }
-  function handleOnBlurEvent(): void {
-    console.log(userInputtedFontSize)
+  function handleOnBlurEvent(e: React.FocusEvent<HTMLInputElement>): void {
+    setActiveFontSize(parseInt(e.currentTarget.value));
   }
-
-  const [userInputtedFontSize, setUserInputtedFontSize] = useState<number | null>(null);
 
   return (
     <>
       <NumberField.Root className={styles.root}
         value={displayedFontSize}
-        onValueChange={(value) => setUserInputtedFontSize(value)}
       >
         <NumberField.Group className={styles.group}>
           <ToolbarTooltip tooltipText="Decrease Font Size (Ctrl+Shift+,)">
@@ -36,7 +32,7 @@ function FontSizeInput({ displayedFontSize, setActiveFontSize, handleDecrementFo
             </NumberField.Decrement>
           </ToolbarTooltip>
           <ToolbarTooltip tooltipText="Font Size">
-            <NumberField.Input className={styles.input} onKeyDown={(e) => handleKeyDownEvent(e)} onBlur={handleOnBlurEvent} />
+            <NumberField.Input className={styles.input} onKeyDown={(e) => handleKeyDownEvent(e)} onBlur={(e) => handleOnBlurEvent(e)} />
           </ToolbarTooltip>
           <ToolbarTooltip tooltipText="Increase Font Size (Ctrl+Shift+.)">
             <NumberField.Increment className={styles.button} onClick={handleIncrementFontSizes}>
