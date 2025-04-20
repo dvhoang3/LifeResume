@@ -116,7 +116,7 @@ function ResumeEditor() {
     }
     else {
       setDisplayedFont(activeStylesProperties.get('fontFamily') ?? null);
-      setDisplayedFontSize(activeStylesProperties.get('fontSize') ?? null);
+      setDisplayedFontSize(!isNaN(activeStylesProperties.get('fontSize')) ? (activeStylesProperties.get('fontSize') ?? null) : null);
     }
   }, [editor]);
 
@@ -157,30 +157,30 @@ function ResumeEditor() {
 
   const [displayedFontSize, setDisplayedFontSize] = useState<number | null>(null);
   const setActiveFontSize = useCallback((fontSize: number | null): void => {
-    if (fontSize === null) return;
+    if (fontSize === null || isNaN(fontSize)) return;
 
     const boundedFontSize = Math.min(Math.max(fontSize, 1), 400);
     editor.chain().focus().setFontSize(boundedFontSize).run();
     setDisplayedFontSize(boundedFontSize);
   }, [editor]);
-  const handleDecrementFontSizes = useCallback((): void => {
-    if (displayedFontSize !== null) {
+  const handleDecrementFontSizes = (): void => {
+    if (displayedFontSize !== null && !isNaN(displayedFontSize)) {
       const boundedFontSize = Math.min(Math.max(displayedFontSize - 1, 1), 400);
       setDisplayedFontSize(boundedFontSize);
     };
 
     editor.chain().focus().run();
     editor.commands.decrementFontSize();
-  }, [editor]);
-  const handleIncrementFontSizes = useCallback((): void => {
-    if (displayedFontSize !== null) {
+  }
+  const handleIncrementFontSizes = (): void => {
+    if (displayedFontSize !== null && !isNaN(displayedFontSize)) {
       const boundedFontSize = Math.min(Math.max(displayedFontSize + 1, 1), 400);
       setDisplayedFontSize(boundedFontSize);
     }
     
     editor.chain().focus().run();
     editor.commands.incrementFontSize();
-  }, [editor]);
+  }
   
   const [textAlign, setTextAlign] = useState<'left' | 'center' | 'right' | 'justify'>('left');
   useEffect(() => {
