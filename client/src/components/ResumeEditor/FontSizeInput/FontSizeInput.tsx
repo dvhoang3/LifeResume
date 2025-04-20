@@ -2,6 +2,7 @@ import { NumberField } from "@base-ui-components/react";
 import { FaMinus, FaPlus } from "react-icons/fa";
 import styles from './FontSizeInpput.module.css';
 import ToolbarTooltip from "../ToolbarTooltip/ToolbarTooltip";
+import { useRef } from "react";
 
 interface FontSizeInputProps {
   displayedFontSize: number | null;
@@ -20,22 +21,45 @@ function FontSizeInput({ displayedFontSize, setActiveFontSize, handleDecrementFo
     setActiveFontSize(parseInt(e.currentTarget.value));
   }
 
+  const timeoutRef = useRef<number | null>(null);
+  const intervalRef = useRef<number | null>(null);
+
+  function handlePointerDownEvent(action: () => void): void {
+    timeoutRef.current = setTimeout(() => {
+      intervalRef.current = setInterval(() => {
+        console.log('testing')
+        action();
+      }, 100);
+    }, 300);
+  }
+  function handlePointerUpEvent(): void {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  }
+
   return (
     <>
       <NumberField.Root className={styles.root}
         value={displayedFontSize}
       >
         <NumberField.Group className={styles.group}>
-          <ToolbarTooltip tooltipText="Decrease Font Size (Ctrl+Shift+,)">
-            <NumberField.Decrement className={styles.button} onClick={handleDecrementFontSizes}>
+          <ToolbarTooltip tooltipText="Decrease Font Size">
+            <NumberField.Decrement className={styles.button} onClick={handleDecrementFontSizes} onPointerDown={() => handlePointerDownEvent(handleDecrementFontSizes)} onPointerUp={handlePointerUpEvent}>
               <FaMinus size={10} />
             </NumberField.Decrement>
           </ToolbarTooltip>
           <ToolbarTooltip tooltipText="Font Size">
             <NumberField.Input className={styles.input} onKeyDown={(e) => handleKeyDownEvent(e)} onBlur={(e) => handleOnBlurEvent(e)} />
           </ToolbarTooltip>
-          <ToolbarTooltip tooltipText="Increase Font Size (Ctrl+Shift+.)">
-            <NumberField.Increment className={styles.button} onClick={handleIncrementFontSizes}>
+          <ToolbarTooltip tooltipText="Increase Font Size">
+            <NumberField.Increment className={styles.button} onClick={handleIncrementFontSizes} onPointerDown={() => handlePointerDownEvent(handleIncrementFontSizes)} onPointerUp={handlePointerUpEvent}>
               <FaPlus size={10} />
             </NumberField.Increment>
           </ToolbarTooltip>

@@ -164,19 +164,21 @@ function ResumeEditor() {
     setDisplayedFontSize(boundedFontSize);
   }, [editor]);
   const handleDecrementFontSizes = (): void => {
-    if (displayedFontSize !== null && !isNaN(displayedFontSize)) {
-      const boundedFontSize = Math.min(Math.max(displayedFontSize - 1, 1), 400);
-      setDisplayedFontSize(boundedFontSize);
-    };
+    setDisplayedFontSize((previousFontSize) => {
+      if (previousFontSize === null || isNaN(previousFontSize)) return previousFontSize;
+
+      return Math.min(Math.max(previousFontSize - 1, 1), 400);
+    });
 
     editor.chain().focus().run();
     editor.commands.decrementFontSize();
   }
-  const handleIncrementFontSizes = (): void => {
-    if (displayedFontSize !== null && !isNaN(displayedFontSize)) {
-      const boundedFontSize = Math.min(Math.max(displayedFontSize + 1, 1), 400);
-      setDisplayedFontSize(boundedFontSize);
-    }
+  const handleIncrementFontSizes = (): void => {      
+    setDisplayedFontSize((previousFontSize) => {
+      if (previousFontSize === null || isNaN(previousFontSize)) return previousFontSize;
+
+      return Math.min(Math.max(previousFontSize + 1, 1), 400);
+    });
     
     editor.chain().focus().run();
     editor.commands.incrementFontSize();
