@@ -19,7 +19,7 @@ import { MdFormatAlignCenter, MdFormatAlignJustify, MdFormatAlignLeft, MdFormatA
 import { MdFormatItalic } from "react-icons/md";
 import { MdFormatUnderlined } from "react-icons/md";
 import FontDropdown from "./FontDropdown/FontDropdown";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import FontSizeInput from "./FontSizeInput/FontSizeInput";
 import { FontSize } from "./custom-extensions/FontSize";
 import { Node } from '@tiptap/pm/model';
@@ -88,7 +88,7 @@ function ResumeEditor() {
     return { node, parent };
   }
 
-  function updateActiveTextStyles(doc: Node, selectionStartPos: number, selectionEndPos: number): void {
+  const updateActiveTextStyles = useCallback((doc: Node, selectionStartPos: number, selectionEndPos: number): void => {
     const nodes: {node: Node, parent: Node}[] = [];
     if (selectionStartPos === selectionEndPos) {
       const { node, parent } = findClosestTextNode(doc, selectionStartPos);
@@ -118,7 +118,7 @@ function ResumeEditor() {
       setDisplayedFont(activeStylesProperties.get('fontFamily') ?? null);
       setDisplayedFontSize(activeStylesProperties.get('fontSize') ?? null);
     }
-  }
+  }, [editor]);
 
   function getActiveStylesFromNodes(nodes: {node: Node, parent: Node}[]): Map<string, Set<any>> {
     const activeStyles: Map<string, Set<any>> = new Map<string, Set<any>>();
@@ -150,20 +150,20 @@ function ResumeEditor() {
   }
 
   const [displayedFont, setDisplayedFont] = useState<string | null>(null);
-  function setActiveFont(font: string): void {
+  const setActiveFont = useCallback((font: string): void => {
     editor.chain().focus().setFontFamily(font).run();
     setDisplayedFont(font);
-  }
+  }, [editor]);
 
   const [displayedFontSize, setDisplayedFontSize] = useState<number | null>(null);
-  function setActiveFontSize(fontSize: number | null): void {
+  const setActiveFontSize = useCallback((fontSize: number | null): void => {
     if (fontSize === null) return;
 
     const boundedFontSize = Math.min(Math.max(fontSize, 1), 400);
     editor.chain().focus().setFontSize(boundedFontSize).run();
     setDisplayedFontSize(boundedFontSize);
-  }
-  function handleDecrementFontSizes(): void {
+  }, [editor]);
+  const handleDecrementFontSizes = useCallback((): void => {
     if (displayedFontSize !== null) {
       const boundedFontSize = Math.min(Math.max(displayedFontSize - 1, 1), 400);
       setDisplayedFontSize(boundedFontSize);
@@ -171,8 +171,8 @@ function ResumeEditor() {
 
     editor.chain().focus().run();
     editor.commands.decrementFontSize();
-  }
-  function handleIncrementFontSizes(): void {
+  }, [editor]);
+  const handleIncrementFontSizes = useCallback((): void => {
     if (displayedFontSize !== null) {
       const boundedFontSize = Math.min(Math.max(displayedFontSize + 1, 1), 400);
       setDisplayedFontSize(boundedFontSize);
@@ -180,30 +180,52 @@ function ResumeEditor() {
     
     editor.chain().focus().run();
     editor.commands.incrementFontSize();
-  }
+  }, [editor]);
   
   const [textAlign, setTextAlign] = useState<'left' | 'center' | 'right' | 'justify'>('left');
   useEffect(() => {
     editor.chain().focus().setTextAlign(textAlign).run();
   }, [textAlign]);
 
-  function insertHorizontalLine(): void {
+  const insertHorizontalLine = useCallback((): void => {
     editor.chain().focus()
       .setHorizontalRule()
       .run();
-  }
+  }, [editor]);
+
+  const handleUndo = useCallback((): void => {
+    editor.chain().focus().undo().run();
+  }, [editor]);
+  const handleRedo = useCallback((): void => {
+    editor.chain().focus().redo().run();
+  }, [editor]);
+  const handleBold = useCallback((): void => {
+    editor.chain().focus().toggleBold().run();
+  }, [editor]);
+  const handleItalic = useCallback((): void => {
+    editor.chain().focus().toggleItalic().run();
+  }, [editor]);
+  const handleUnderline = useCallback((): void => {
+    editor.chain().focus().toggleUnderline().run();
+  }, [editor]);
+  const handleBulletList = useCallback((): void => {
+    editor.chain().focus().toggleBulletList().run();
+  }, [editor]);
+  const handleOrderedList = useCallback((): void => {
+    editor.chain().focus().toggleOrderedList().run();
+  }, [editor]);
 
   return (
     <>
       <div className={styles.editorContainer}>
         <div className={styles.toolbar}>
           <ToolbarTooltip tooltipText="Undo (Ctrl+Z)">
-            <button className={styles.toolbarButton} onClick={() => editor.chain().focus().undo().run()}>
+            <button className={styles.toolbarButton} onClick={handleUndo}>
               <BiUndo size={iconSize} />
             </button>
           </ToolbarTooltip>
           <ToolbarTooltip tooltipText="Redo (Ctrl+Y)">
-            <button className={styles.toolbarButton} onClick={() => editor.chain().focus().redo().run()}>
+            <button className={styles.toolbarButton} onClick={handleRedo}>
               <BiRedo size={iconSize} />
             </button>
           </ToolbarTooltip>
@@ -222,21 +244,21 @@ function ResumeEditor() {
           <div className={styles.toolbarSpacer}></div>
           <ToolbarTooltip tooltipText="Bold (Ctrl+B)">
             <button className={`${styles.toolbarButton} ${editor.isActive('bold') ? styles.isActive : ''}`}
-              onClick={() => editor.chain().focus().toggleBold().run()}
+              onClick={handleBold}
             >
               <MdFormatBold size={iconSize} />
             </button>
           </ToolbarTooltip>
           <ToolbarTooltip tooltipText="Italic (Ctrl+I)">
             <button className={`${styles.toolbarButton} ${editor.isActive('italic') ? styles.isActive : ''}`}
-              onClick={() => editor.chain().focus().toggleItalic().run()}
+              onClick={handleItalic}
             >
               <MdFormatItalic size={iconSize} />
             </button>
           </ToolbarTooltip>
           <ToolbarTooltip tooltipText="Underline (Ctrl+U)">
             <button className={`${styles.toolbarButton} ${editor.isActive('underline') ? styles.isActive : ''}`}
-              onClick={() => editor.chain().focus().toggleUnderline().run()}
+              onClick={handleUnderline}
             >
               <MdFormatUnderlined size={iconSize} />
             </button>
@@ -273,14 +295,14 @@ function ResumeEditor() {
           <div className={styles.toolbarSpacer}></div>
           <ToolbarTooltip tooltipText="Bulleted List (Ctrl+Shift+8)">
             <button className={`${styles.toolbarButton} ${editor.isActive('bulletList') ? styles.isActive : ''}`}
-              onClick={() => editor.chain().focus().toggleBulletList().run()}
+              onClick={handleBulletList}
             >
               <MdFormatListBulleted size={iconSize} />
             </button>
           </ToolbarTooltip>
           <ToolbarTooltip tooltipText="Numbered List (Ctrl+Shift+7)">
             <button className={`${styles.toolbarButton} ${editor.isActive('orderedList') ? styles.isActive : ''}`}
-              onClick={() => editor.chain().focus().toggleOrderedList().run()}
+              onClick={handleOrderedList}
             >
               <MdFormatListNumbered size={iconSize} />
             </button>
@@ -288,7 +310,7 @@ function ResumeEditor() {
           <div className={styles.toolbarSpacer}></div>
           <ToolbarTooltip tooltipText="Horizontal Line">
             <button className={styles.toolbarButton}
-              onClick={() => insertHorizontalLine()}
+              onClick={insertHorizontalLine}
             >
               <MdOutlineHorizontalRule size={iconSize} />
             </button>
