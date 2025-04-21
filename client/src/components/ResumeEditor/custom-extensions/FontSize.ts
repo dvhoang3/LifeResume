@@ -60,7 +60,6 @@ export const FontSize = Extension.create<FontSizeOptions>({
         attributes: {
           fontSize: {
             default: null,
-            parseHTML: element => element.style.fontSize,
             renderHTML: attributes => {
               if (!attributes.fontSize) {
                 return {}
@@ -79,7 +78,7 @@ export const FontSize = Extension.create<FontSizeOptions>({
   addCommands() {
     return {
       setFontSize: fontSize => ({ chain }: CommandProps) => {
-        if (!fontSize || fontSize < 1) return false;
+        if (!fontSize || fontSize < 1 || fontSize > 400) return false;
 
         return chain()
           .setMark('textStyle', { fontSize })
@@ -92,97 +91,75 @@ export const FontSize = Extension.create<FontSizeOptions>({
           .run();
       },
 
-      incrementFontSize:
-        () =>
-          ({ state, dispatch }: CommandProps) => {
-            if (!dispatch) {
-              return false;
-            }
+      incrementFontSize: () => ({ chain, state }) => {
+        const defaultSize = this.options.defaultSize;
+        const { schema, doc, selection } = state;
 
-            let tr = state.tr;
-            const { schema } = state;
-            const { from, to } = state.selection;
+        return chain()
+          .command(({ tr, dispatch }) => {
+            let newTr = tr;
+            const { from, to } = selection;
 
-            state.doc.nodesBetween(from, to, (node, pos) => {
-              if (!node.isText) {
-                return;
-              }
+            doc.nodesBetween(from, to, (node, pos) => {
+              if (!node.isText) return;
+              const start = Math.max(pos, from);
+              const end = Math.min(pos + node.nodeSize, to);
+              if (start >= end) return;
 
-              const nodeStart = pos;
-              const nodeEnd = pos + node.nodeSize;
-              const start = Math.max(nodeStart, from);
-              const end = Math.min(nodeEnd, to);
-
-              if (start >= end) {
-                return;
-              }
-
-              const tsMark = node.marks.find(
-                (m) => m.type === schema.marks.textStyle,
-              );
-              const curr = (tsMark?.attrs.fontSize as number) ?? this.options.defaultSize;
+              const tsMark = node.marks.find(m => m.type === schema.marks.textStyle);
+              const curr = (tsMark?.attrs.fontSize as number) ?? defaultSize;
               const next = Math.min(400, curr + 1);
 
-              tr = tr.removeMark(start, end, schema.marks.textStyle);
-              tr = tr.addMark(
-                start,
-                end,
-                schema.marks.textStyle.create({ fontSize: next }),
-              );
+              newTr = newTr
+                .removeMark(start, end, schema.marks.textStyle)
+                .addMark(
+                  start,
+                  end,
+                  schema.marks.textStyle.create({ fontSize: next }),
+                );
             });
 
-            if (tr.docChanged) {
-              dispatch(tr.scrollIntoView());
-              return true;
-            }
-            return false;
-          },
+            if (!newTr.docChanged) return false;
+            dispatch?.(newTr.scrollIntoView());
+            return true;
+          })
+          .run();
+      },
 
-      decrementFontSize:
-        () =>
-          ({ state, dispatch }: CommandProps) => {
-            if (!dispatch) {
-              return false;
-            }
+      decrementFontSize: () => ({ chain, state }) => {
+        const defaultSize = this.options.defaultSize;
+        const { schema, doc, selection } = state;
 
-            let tr = state.tr;
-            const { schema } = state;
-            const { from, to } = state.selection;
+        return chain()
+          .command(({ tr, dispatch }) => {
+            let newTr = tr;
+            const { from, to } = selection;
 
-            state.doc.nodesBetween(from, to, (node, pos) => {
-              if (!node.isText) {
-                return;
-              }
+            doc.nodesBetween(from, to, (node, pos) => {
+              if (!node.isText) return;
+              const start = Math.max(pos, from);
+              const end = Math.min(pos + node.nodeSize, to);
+              if (start >= end) return;
 
-              const nodeStart = pos;
-              const nodeEnd = pos + node.nodeSize;
-              const start = Math.max(nodeStart, from);
-              const end = Math.min(nodeEnd, to);
-
-              if (start >= end) {
-                return;
-              }
-
-              const tsMark = node.marks.find(
-                (m) => m.type === schema.marks.textStyle,
-              );
-              const curr = (tsMark?.attrs.fontSize as number) ?? this.options.defaultSize;
+              const tsMark = node.marks.find(m => m.type === schema.marks.textStyle);
+              const curr = (tsMark?.attrs.fontSize as number) ?? defaultSize;
               const next = Math.max(1, curr - 1);
 
-              tr = tr.removeMark(start, end, schema.marks.textStyle);
-              tr = tr.addMark(
-                start,
-                end,
-                schema.marks.textStyle.create({ fontSize: next }),
-              );
+              newTr = newTr
+                .removeMark(start, end, schema.marks.textStyle)
+                .addMark(
+                  start,
+                  end,
+                  schema.marks.textStyle.create({ fontSize: next }),
+                );
             });
 
-            if (tr.docChanged) {
-              dispatch(tr.scrollIntoView());
-              return true;
-            }
-            return false;
-          },
+            if (!newTr.docChanged) return false;
+            dispatch?.(newTr.scrollIntoView());
+            return true;
+          })
+          .run();
+      },
     }
   },
 })

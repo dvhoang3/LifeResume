@@ -27,10 +27,21 @@ import { OnBlurHighlight } from './custom-extensions/OnBlurHighlight';
 import OrderedList from '@tiptap/extension-ordered-list';
 import { BiRedo, BiUndo } from "react-icons/bi";
 import ToolbarTooltip from "./ToolbarTooltip/ToolbarTooltip";
+import { OnePageLimitCharacters } from "./custom-extensions/OnePageLimitCharacters";
+import { OnePageLimitParagraph } from "./custom-extensions/OnePageLimitParagraph";
 
-const iconSize: number = 18;
 
-function ResumeEditor() {
+
+interface ResumeEditorProps {
+  isEditable: boolean,
+}
+
+const PAGE_WIDTH_PX = 816;
+const PAGE_HEIGHT_PX = 1056;
+const PAGE_MARGIN_PX = 72;
+const ICON_SIZE: number = 18;
+
+function ResumeEditor({ isEditable }: ResumeEditorProps) {
   const editor = useEditor({
     extensions: [
       Document,
@@ -53,19 +64,25 @@ function ResumeEditor() {
       }),
       HardBreak,
       OnBlurHighlight,
+      OnePageLimitCharacters,
+      OnePageLimitParagraph,
     ],
     injectCSS: false,
     editorProps: {
       attributes: {
-        class: styles.editorContentContainer,
+        class: styles.editorContent,
       },
     },
+    editable: isEditable,
     onSelectionUpdate({ editor, transaction }) {
       const { from, to } = transaction.selection;
       updateActiveTextStyles(editor.state.doc, from, to);
     },
     onCreate({ editor }) {
       updateActiveTextStyles(editor.state.doc, 1, 1);
+    },
+    onPaste() {
+      console.log('pasting')
     },
   }) as Editor;
   if (!editor) return null;
@@ -88,10 +105,11 @@ function ResumeEditor() {
     return { node, parent };
   }
 
+  // TODO: paste and styles are being applied to entire node after inserting with selection active (have to split node)
   const updateActiveTextStyles = useCallback((doc: Node, selectionStartPos: number, selectionEndPos: number): void => {
     const nodes: {node: Node, parent: Node}[] = [];
     if (selectionStartPos === selectionEndPos) {
-      const { node, parent } = findClosestTextNode(doc, selectionStartPos);
+      const { node, parent } = findClosestTextNode(doc, selectionStartPos - 1);
       if (node && parent && node.isText) {
         nodes.push({ node, parent });
       }
@@ -170,18 +188,16 @@ function ResumeEditor() {
       return Math.min(Math.max(previousFontSize - 1, 1), 400);
     });
 
-    editor.chain().focus().run();
-    editor.commands.decrementFontSize();
+    editor.chain().focus().decrementFontSize().run();
   }
-  const handleIncrementFontSizes = (): void => {      
+  const handleIncrementFontSizes = (): void => {
     setDisplayedFontSize((previousFontSize) => {
       if (previousFontSize === null || isNaN(previousFontSize)) return previousFontSize;
 
       return Math.min(Math.max(previousFontSize + 1, 1), 400);
     });
     
-    editor.chain().focus().run();
-    editor.commands.incrementFontSize();
+    editor.chain().focus().incrementFontSize().run();
   }
   
   const [textAlign, setTextAlign] = useState<'left' | 'center' | 'right' | 'justify'>('left');
@@ -220,15 +236,15 @@ function ResumeEditor() {
   return (
     <>
       <div className={styles.editorContainer}>
-        <div className={styles.toolbar}>
+        {isEditable && <div className={styles.toolbar}>
           <ToolbarTooltip tooltipText="Undo (Ctrl+Z)">
             <button className={styles.toolbarButton} onClick={handleUndo}>
-              <BiUndo size={iconSize} />
+              <BiUndo size={ICON_SIZE} />
             </button>
           </ToolbarTooltip>
           <ToolbarTooltip tooltipText="Redo (Ctrl+Y)">
             <button className={styles.toolbarButton} onClick={handleRedo}>
-              <BiRedo size={iconSize} />
+              <BiRedo size={ICON_SIZE} />
             </button>
           </ToolbarTooltip>
           <div className={styles.toolbarSpacer}></div>
@@ -248,21 +264,21 @@ function ResumeEditor() {
             <button className={`${styles.toolbarButton} ${editor.isActive('bold') ? styles.isActive : ''}`}
               onClick={handleBold}
             >
-              <MdFormatBold size={iconSize} />
+              <MdFormatBold size={ICON_SIZE} />
             </button>
           </ToolbarTooltip>
           <ToolbarTooltip tooltipText="Italic (Ctrl+I)">
             <button className={`${styles.toolbarButton} ${editor.isActive('italic') ? styles.isActive : ''}`}
               onClick={handleItalic}
             >
-              <MdFormatItalic size={iconSize} />
+              <MdFormatItalic size={ICON_SIZE} />
             </button>
           </ToolbarTooltip>
           <ToolbarTooltip tooltipText="Underline (Ctrl+U)">
             <button className={`${styles.toolbarButton} ${editor.isActive('underline') ? styles.isActive : ''}`}
               onClick={handleUnderline}
             >
-              <MdFormatUnderlined size={iconSize} />
+              <MdFormatUnderlined size={ICON_SIZE} />
             </button>
           </ToolbarTooltip>
           <div className={styles.toolbarSpacer}></div>
@@ -270,28 +286,28 @@ function ResumeEditor() {
             <button className={`${styles.toolbarButton} ${editor.isActive({ textAlign: 'left' }) ? styles.isActive : ''}`}
               onClick={() => setTextAlign('left')}
             >
-              <MdFormatAlignLeft size={iconSize} />
+              <MdFormatAlignLeft size={ICON_SIZE} />
             </button>
           </ToolbarTooltip>
           <ToolbarTooltip tooltipText="Center Align (Ctrl+Shift+E)">
             <button className={`${styles.toolbarButton} ${editor.isActive({ textAlign: 'center' }) ? styles.isActive : ''}`}
               onClick={() => setTextAlign('center')}
             >
-              <MdFormatAlignCenter size={iconSize} />
+              <MdFormatAlignCenter size={ICON_SIZE} />
             </button>
           </ToolbarTooltip>
           <ToolbarTooltip tooltipText="Right Align (Ctrl+Shift+R)">
             <button className={`${styles.toolbarButton} ${editor.isActive({ textAlign: 'right' }) ? styles.isActive : ''}`}
               onClick={() => setTextAlign('right')}
             >
-              <MdFormatAlignRight size={iconSize} />
+              <MdFormatAlignRight size={ICON_SIZE} />
             </button>
           </ToolbarTooltip>
           <ToolbarTooltip tooltipText="Justify (Ctrl+Shift+J)">
             <button className={`${styles.toolbarButton} ${editor.isActive({ textAlign: 'justify' }) ? styles.isActive : ''}`}
               onClick={() => setTextAlign('justify')}
             >
-              <MdFormatAlignJustify size={iconSize} />
+              <MdFormatAlignJustify size={ICON_SIZE} />
             </button>
           </ToolbarTooltip>
           <div className={styles.toolbarSpacer}></div>
@@ -299,14 +315,14 @@ function ResumeEditor() {
             <button className={`${styles.toolbarButton} ${editor.isActive('bulletList') ? styles.isActive : ''}`}
               onClick={handleBulletList}
             >
-              <MdFormatListBulleted size={iconSize} />
+              <MdFormatListBulleted size={ICON_SIZE} />
             </button>
           </ToolbarTooltip>
           <ToolbarTooltip tooltipText="Numbered List (Ctrl+Shift+7)">
             <button className={`${styles.toolbarButton} ${editor.isActive('orderedList') ? styles.isActive : ''}`}
               onClick={handleOrderedList}
             >
-              <MdFormatListNumbered size={iconSize} />
+              <MdFormatListNumbered size={ICON_SIZE} />
             </button>
           </ToolbarTooltip>
           <div className={styles.toolbarSpacer}></div>
@@ -314,12 +330,14 @@ function ResumeEditor() {
             <button className={styles.toolbarButton}
               onClick={insertHorizontalLine}
             >
-              <MdOutlineHorizontalRule size={iconSize} />
+              <MdOutlineHorizontalRule size={ICON_SIZE} />
             </button>
           </ToolbarTooltip>
-        </div>
+        </div>}
         <div className={styles.editorContentWrapper}>
-          <EditorContent editor={editor} />
+          <div className={styles.editorContentContainer} style={{width: `${PAGE_WIDTH_PX}px`, minHeight: `${PAGE_HEIGHT_PX}px`, maxHeight: `${PAGE_HEIGHT_PX}px`, padding: `${PAGE_MARGIN_PX}px`}}>
+            <EditorContent editor={editor} />
+          </div>
         </div>
       </div>
     </>

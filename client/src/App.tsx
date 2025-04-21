@@ -3,7 +3,7 @@ import ResumeEditor from "./components/ResumeEditor/ResumeEditor"
 function App() {
   return (
     <>
-      <ResumeEditor />
+      <ResumeEditor isEditable={true} />
     </>
   )
 }

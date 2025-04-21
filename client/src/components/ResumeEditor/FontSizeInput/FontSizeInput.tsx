@@ -27,7 +27,6 @@ function FontSizeInput({ displayedFontSize, setActiveFontSize, handleDecrementFo
   function handlePointerDownEvent(action: () => void): void {
     timeoutRef.current = setTimeout(() => {
       intervalRef.current = setInterval(() => {
-        console.log('testing')
         action();
       }, 100);
     }, 300);
@@ -42,6 +41,10 @@ function FontSizeInput({ displayedFontSize, setActiveFontSize, handleDecrementFo
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
+
+    if (displayedFontSize) {
+      setActiveFontSize(displayedFontSize);
+    }
   }
 
   return (
@@ -51,17 +54,25 @@ function FontSizeInput({ displayedFontSize, setActiveFontSize, handleDecrementFo
       >
         <NumberField.Group className={styles.group}>
           <ToolbarTooltip tooltipText="Decrease Font Size">
-            <NumberField.Decrement className={styles.button} onClick={handleDecrementFontSizes} onPointerDown={() => handlePointerDownEvent(handleDecrementFontSizes)} onPointerUp={handlePointerUpEvent}>
+            <button className={styles.button}
+              onClick={handleDecrementFontSizes}
+              onPointerDown={() => handlePointerDownEvent(handleDecrementFontSizes)}
+              onPointerUp={handlePointerUpEvent}
+            >
               <FaMinus size={10} />
-            </NumberField.Decrement>
+            </button>
           </ToolbarTooltip>
           <ToolbarTooltip tooltipText="Font Size">
             <NumberField.Input className={styles.input} onKeyDown={(e) => handleKeyDownEvent(e)} onBlur={(e) => handleOnBlurEvent(e)} />
           </ToolbarTooltip>
           <ToolbarTooltip tooltipText="Increase Font Size">
-            <NumberField.Increment className={styles.button} onClick={handleIncrementFontSizes} onPointerDown={() => handlePointerDownEvent(handleIncrementFontSizes)} onPointerUp={handlePointerUpEvent}>
+            <button className={styles.button}
+              onClick={handleIncrementFontSizes}
+              onPointerDown={() => handlePointerDownEvent(handleIncrementFontSizes)}
+              onPointerUp={handlePointerUpEvent}
+            >
               <FaPlus size={10} />
-            </NumberField.Increment>
+            </button>
           </ToolbarTooltip>
         </NumberField.Group>
       </NumberField.Root>
